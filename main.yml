@@ -1,0 +1,45 @@
+---
+
+- hosts: all
+  tasks:
+
+  - name: update cache
+    apt:
+      update_cache: yes
+
+  - name: Install Apache2 and PHP  
+    apt:
+      pkg:
+        - apache2
+        - php
+        - libapache2-mod-php
+      state: latest
+      update_cache: yes
+
+  - name: Start and enable Apache2
+    service:
+      name: apache2
+      state: started
+      enabled: yes
+    
+  - name: Set timezone to Africa/Lagos
+    timezone:
+      name: Africa/Lagos
+
+  - name: Remove the default apache root file
+    file:
+        path: /var/www/html/index.html
+        state: absent
+
+  - name: Copy php directory and its content to remote host
+    copy:
+      src: ./server_stats_template/
+      dest: /var/www/html
+      mode: 0744
+    notify: restart_apache   
+
+  handlers:
+  - name: restart_apache
+    systemd:
+      name: apache2
+      state: restarted
